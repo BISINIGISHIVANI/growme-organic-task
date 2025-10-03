@@ -38,7 +38,7 @@ function App() {
     page: 1,
   });
   const [loading, setLoading] = useState<boolean>(false);
-  const [selectCount, setSelectCount] = useState<number | undefined>();
+  const [selectCount, setSelectCount] = useState<number | null | undefined>();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [pendingSelection, setPendingSelection] =
     useState<PendingSelection | null>(null);
