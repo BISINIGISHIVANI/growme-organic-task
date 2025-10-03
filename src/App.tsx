@@ -7,20 +7,43 @@ import { OverlayPanel } from "primereact/overlaypanel";
 import { Button } from "primereact/button";
 import { InputNumber } from "primereact/inputnumber";
 
+type Product = {
+  no: number;
+  id: number;
+  name: string;
+  place: string;
+  artist: string;
+  inscriptions: string;
+  startDate: string | number;
+  endDate: string | number;
+};
+
+type LazyState = {
+  first: number;
+  rows: number;
+  page: number;
+};
+
+type PendingSelection = {
+  startPage: number;
+  remaining: number;
+};
+
 function App() {
-  const [products, setProducts] = useState([]);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [lazyState, setLazyState] = useState({
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+  const [lazyState, setLazyState] = useState<LazyState>({
     first: 0,
     rows: 12,
     page: 1,
   });
-  const [loading, setLoading] = useState(false);
-  const [selectCount, setSelectCount] = useState();
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [pendingSelection, setPendingSelection] = useState(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [selectCount, setSelectCount] = useState<number | undefined>();
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [pendingSelection, setPendingSelection] =
+    useState<PendingSelection | null>(null);
 
-  const op = useRef(null);
+  const op = useRef<OverlayPanel>(null);
 
   const titleHeaderTemplate = () => (
     <div
@@ -33,29 +56,32 @@ function App() {
     >
       <i
         className="pi pi-angle-down"
-        onMouseEnter={(e) => op.current.toggle(e)}
+        onMouseEnter={(e) => op.current?.toggle(e)}
       />
       <span>Title</span>
     </div>
   );
 
-  const fetchTableData = async (page) => {
+  const fetchTableData = async (page: number) => {
     try {
       setLoading(true);
       const res = await axios.get(
         `https://api.artic.edu/api/v1/artworks?page=${page}`
       );
 
-      const mapped = res.data.data.map((item, index) => ({
-        no: lazyState.first + index + 1,
-        id: item.id,
-        name: item.title,
-        place: item.place_of_origin,
-        artist: item.artist_display || "Unknown",
-        inscriptions: item.inscriptions || "-",
-        startDate: item.date_start || "-",
-        endDate: item.date_end || "-",
-      }));
+      const mapped: Product[] = res.data.data.map(
+        (item: any, index: number) => ({
+          no: lazyState.first + index + 1,
+          id: item.id,
+          name: item.title,
+          place: item.place_of_origin,
+          artist: item.artist_display || "Unknown",
+          inscriptions: item.inscriptions || "-",
+          startDate: item.date_start || "-",
+          endDate: item.date_end || "-",
+        })
+      );
+
       if (
         pendingSelection &&
         page >= pendingSelection.startPage &&
@@ -90,10 +116,10 @@ function App() {
   };
 
   useEffect(() => {
-    fetchTableData(lazyState.page, lazyState.rows);
+    fetchTableData(lazyState.page);
   }, [lazyState]);
 
-  const onPage = (event) => {
+  const onPage = (event: any) => {
     setLazyState({
       ...lazyState,
       first: event.first,
@@ -102,7 +128,7 @@ function App() {
     });
   };
 
-  const onSelectionChange = (selectedRows) => {
+  const onSelectionChange = (selectedRows: Product[]) => {
     const newSelectedIds = new Set(selectedIds);
 
     selectedRows.forEach((row) => newSelectedIds.add(row.id));
@@ -135,8 +161,8 @@ function App() {
     }
 
     setSelectedIds(newSelectedIds);
-    setSelectCount(null);
-    op.current.hide();
+    setSelectCount(undefined);
+    op.current?.hide();
   };
 
   return (
